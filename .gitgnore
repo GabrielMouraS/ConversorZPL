@@ -1,0 +1,83 @@
+# Visual Studio
+.vs/
+.idea/
+
+# Build e saída
+bin/
+obj/
+Debug/
+Release/
+x64/
+x86/
+publish/
+build/
+
+# Arquivos de usuário Visual Studio
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.ReSharper
+_ReSharper*/
+
+# Rider
+.idea/
+
+# Logs
+*.log
+
+# Arquivos temporários
+*.tmp
+*.temp
+*.cache
+
+# NuGet
+packages/
+*.nupkg
+
+# Testes
+TestResults/
+
+# Arquivos de banco local
+*.mdf
+*.ldf
+
+# Backup
+Backup*/
+
+# Arquivos de sistema operacional
+Thumbs.db
+.DS_Store
+*.lnk
+
+# Variáveis de ambiente
+.env
+.env.local
+*.pem
+*.key
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.spec
+dist/
+build/
+*.pyc
+
+# Distribuidores compilados
+*.exe
+*.dll
+*.so
+
+# Arquivos de configuração local (credenciais, chaves)
+appsettings.local.json
+config.local.json
+
+# XML gerado em build
+*.xml (dentro de bin/obj/)

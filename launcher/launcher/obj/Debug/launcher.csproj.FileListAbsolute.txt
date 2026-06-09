@@ -1,0 +1,10 @@
+C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\VS\launcher\launcher\bin\Debug\launcher.exe.config
+C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\VS\launcher\launcher\bin\Debug\launcher.exe
+C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\VS\launcher\launcher\bin\Debug\launcher.pdb
+C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\VS\launcher\launcher\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\VS\launcher\launcher\bin\Debug\Newtonsoft.Json.xml
+C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\VS\launcher\launcher\obj\Debug\launcher.csproj.AssemblyReference.cache
+C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\VS\launcher\launcher\obj\Debug\launcher.csproj.CoreCompileInputs.cache
+C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\VS\launcher\launcher\obj\Debug\launcher.csproj.Up2Date
+C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\VS\launcher\launcher\obj\Debug\launcher.exe
+C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\VS\launcher\launcher\obj\Debug\launcher.pdb
