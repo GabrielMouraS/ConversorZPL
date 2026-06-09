@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 
 namespace ConversorLauncher // Nome corrigido
 {
@@ -56,6 +57,15 @@ namespace ConversorLauncher // Nome corrigido
                     Arguments = argumentos,
                     UseShellExecute = false
                 });
+            }
+            else
+            {
+                // Primeira execução sem internet: o núcleo ainda não foi baixado
+                MessageBox.Show(
+                    "Não foi possível inicializar o ConversorZPL.\n\nVerifique sua conexão com a internet e tente novamente.\n\nSe o problema persistir, entre em contato com o suporte.",
+                    "ConversorZPL — Erro de Inicialização",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
     }

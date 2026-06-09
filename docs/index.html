@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ConversorZPL — Converta etiquetas ZPL em PDF com um clique</title>
+  <meta name="description" content="Conversor silencioso de arquivos ZPL para PDF. Dê um duplo clique no arquivo e a etiqueta abre pronta. Funciona no Windows 7." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #080c14;
+      --bg2:       #0d1220;
+      --bg3:       #111827;
+      --border:    rgba(255,255,255,0.07);
+      --cyan:      #00d4ff;
+      --cyan-dim:  rgba(0,212,255,0.12);
+      --purple:    #7c3aed;
+      --purple-dim:rgba(124,58,237,0.15);
+      --green:     #10b981;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --card:      rgba(255,255,255,0.03);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ── NOISE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: .4;
+    }
+
+    /* ── GLOW BLOBS ── */
+    .blob {
+      position: fixed; border-radius: 50%; filter: blur(120px);
+      pointer-events: none; z-index: 0; animation: drift 18s ease-in-out infinite alternate;
+    }
+    .blob-1 { width: 600px; height: 600px; background: rgba(0,212,255,.08); top: -200px; left: -100px; }
+    .blob-2 { width: 500px; height: 500px; background: rgba(124,58,237,.1); bottom: -150px; right: -100px; animation-delay: -9s; }
+    @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(40px, 30px) scale(1.1); } }
+
+    /* ── LAYOUT ── */
+    section, header, footer { position: relative; z-index: 1; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      padding: 18px 0;
+      background: rgba(8,12,20,.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 1100px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; color: var(--text);
+    }
+    .nav-logo-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .nav-logo-text { font-weight: 700; font-size: 1rem; letter-spacing: -.3px; }
+    .nav-logo-text span { color: var(--cyan); }
+    .nav-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .7rem; font-weight: 600;
+      background: var(--cyan-dim); color: var(--cyan);
+      border: 1px solid rgba(0,212,255,.25);
+      padding: 2px 8px; border-radius: 20px;
+    }
+    .nav-cta {
+      background: var(--cyan); color: #000;
+      font-weight: 700; font-size: .85rem;
+      padding: 8px 18px; border-radius: 8px;
+      text-decoration: none;
+      transition: opacity .2s, transform .2s;
+    }
+    .nav-cta:hover { opacity: .88; transform: translateY(-1px); }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 110px 0 90px;
+      text-align: center;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: .8rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--cyan); border: 1px solid rgba(0,212,255,.25);
+      background: var(--cyan-dim); padding: 5px 14px; border-radius: 20px;
+      margin-bottom: 28px;
+    }
+    .hero-eyebrow-dot {
+      width: 6px; height: 6px; background: var(--cyan);
+      border-radius: 50%; animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 900; line-height: 1.1; letter-spacing: -.03em;
+      margin-bottom: 24px;
+    }
+    .hero h1 .grad {
+      background: linear-gradient(135deg, var(--cyan) 0%, #a78bfa 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--muted); max-width: 560px; margin: 0 auto 44px;
+      line-height: 1.7;
+    }
+
+    .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: linear-gradient(135deg, var(--cyan), #0099cc);
+      color: #000; font-weight: 800; font-size: 1rem;
+      padding: 16px 32px; border-radius: 12px; text-decoration: none;
+      box-shadow: 0 0 40px rgba(0,212,255,.3);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(0,212,255,.45); }
+    .btn-primary svg { flex-shrink: 0; }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid var(--border); color: var(--text);
+      font-weight: 600; font-size: 1rem;
+      padding: 16px 28px; border-radius: 12px; text-decoration: none;
+      background: var(--card); backdrop-filter: blur(10px);
+      transition: border-color .2s, background .2s;
+    }
+    .btn-secondary:hover { border-color: rgba(255,255,255,.2); background: rgba(255,255,255,.06); }
+
+    /* ── DEMO BLOCK ── */
+    .demo-wrap {
+      margin-top: 72px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px; overflow: hidden;
+      max-width: 720px; margin-left: auto; margin-right: auto;
+      box-shadow: 0 40px 80px rgba(0,0,0,.6);
+    }
+    .demo-bar {
+      background: #1a1f2e; padding: 12px 16px;
+      display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; } .dot-y { background: #febc2e; } .dot-g { background: #28c840; }
+    .demo-bar-title { flex: 1; text-align: center; font-size: .75rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+    .demo-body { padding: 32px; }
+    .demo-steps { display: flex; flex-direction: column; gap: 16px; }
+    .demo-step {
+      display: flex; align-items: flex-start; gap: 16px;
+      background: rgba(255,255,255,.03); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px 20px;
+      animation: fadeUp .6s ease both;
+    }
+    .demo-step:nth-child(1) { animation-delay: .1s; }
+    .demo-step:nth-child(2) { animation-delay: .25s; }
+    .demo-step:nth-child(3) { animation-delay: .4s; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    .demo-step-icon {
+      width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+    .icon-blue  { background: var(--cyan-dim); }
+    .icon-purple{ background: var(--purple-dim); }
+    .icon-green { background: rgba(16,185,129,.12); }
+    .demo-step-text strong { display: block; font-size: .9rem; font-weight: 700; margin-bottom: 2px; }
+    .demo-step-text span { font-size: .8rem; color: var(--muted); }
+    .demo-step-tag {
+      margin-left: auto; font-size: .7rem; font-weight: 600;
+      padding: 3px 10px; border-radius: 20px;
+      font-family: 'JetBrains Mono', monospace; flex-shrink: 0;
+    }
+    .tag-blue   { background: var(--cyan-dim);   color: var(--cyan);  border: 1px solid rgba(0,212,255,.2); }
+    .tag-purple { background: var(--purple-dim);  color: #a78bfa;      border: 1px solid rgba(124,58,237,.3); }
+    .tag-green  { background: rgba(16,185,129,.1);color: var(--green); border: 1px solid rgba(16,185,129,.2); }
+
+    /* ── STATS ── */
+    .stats {
+      padding: 60px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+    .stat {
+      text-align: center; padding: 32px 20px;
+      border-right: 1px solid var(--border);
+    }
+    .stat:last-child { border-right: none; }
+    .stat-num {
+      font-size: 2.6rem; font-weight: 900; letter-spacing: -.04em;
+      background: linear-gradient(135deg, var(--cyan), #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      display: block;
+    }
+    .stat-label { font-size: .85rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── FEATURES ── */
+    .features { padding: 100px 0; }
+    .section-label {
+      font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--cyan); margin-bottom: 14px; display: block;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 900; letter-spacing: -.03em; line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    .section-sub { color: var(--muted); max-width: 500px; line-height: 1.7; }
+
+    .features-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; margin-top: 72px; }
+    .features-list { display: flex; flex-direction: column; gap: 6px; }
+    .feat-item {
+      display: flex; gap: 16px; align-items: flex-start;
+      padding: 20px; border-radius: 14px; cursor: default;
+      transition: background .2s; border: 1px solid transparent;
+    }
+    .feat-item:hover { background: var(--card); border-color: var(--border); }
+    .feat-icon {
+      width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+    .feat-item h3 { font-size: .95rem; font-weight: 700; margin-bottom: 4px; }
+    .feat-item p  { font-size: .85rem; color: var(--muted); line-height: 1.6; }
+
+    .features-visual {
+      position: sticky; top: 100px;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 28px; overflow: hidden;
+    }
+    .features-visual::before {
+      content: ''; position: absolute; inset: 0; border-radius: 20px;
+      background: linear-gradient(135deg, rgba(0,212,255,.04), rgba(124,58,237,.04));
+      pointer-events: none;
+    }
+    .vis-title { font-size: .75rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-bottom: 20px; }
+    .vis-file {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;
+    }
+    .vis-file-icon { font-size: 22px; }
+    .vis-file-name { font-family: 'JetBrains Mono', monospace; font-size: .85rem; font-weight: 600; }
+    .vis-file-size { font-size: .75rem; color: var(--muted); }
+    .vis-arrow { text-align: center; color: var(--cyan); font-size: 1.4rem; margin: 8px 0; }
+    .vis-progress {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px;
+    }
+    .vis-progress-label { display: flex; justify-content: space-between; font-size: .78rem; color: var(--muted); margin-bottom: 10px; }
+    .vis-bar-track { background: rgba(255,255,255,.07); border-radius: 4px; height: 6px; overflow: hidden; }
+    .vis-bar-fill  { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--cyan), var(--purple)); width: 100%; animation: fillBar 2s ease-in-out infinite alternate; }
+    @keyframes fillBar { from{width:30%} to{width:100%} }
+    .vis-api { margin-top: 16px; font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--muted); }
+    .vis-api span { color: var(--cyan); }
+    .vis-result {
+      margin-top: 16px;
+      background: rgba(16,185,129,.08); border: 1px solid rgba(16,185,129,.2);
+      border-radius: 10px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .vis-result-icon { font-size: 20px; }
+    .vis-result-text { font-size: .82rem; font-weight: 600; color: var(--green); }
+
+    /* ── HOW IT WORKS ── */
+    .how { padding: 100px 0; background: var(--bg2); }
+    .how-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: 64px; }
+    .how-card {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 18px; padding: 32px 28px; position: relative; overflow: hidden;
+    }
+    .how-card::before {
+      content: attr(data-num);
+      position: absolute; top: 20px; right: 24px;
+      font-size: 5rem; font-weight: 900; line-height: 1;
+      color: rgba(255,255,255,.03); font-family: 'JetBrains Mono', monospace;
+      pointer-events: none;
+    }
+    .how-card-icon { font-size: 32px; margin-bottom: 20px; }
+    .how-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; }
+    .how-card p  { font-size: .85rem; color: var(--muted); line-height: 1.7; }
+    .how-card-accent { margin-top: 20px; }
+    .code-pill {
+      display: inline-block; font-family: 'JetBrains Mono', monospace;
+      font-size: .72rem; color: var(--cyan);
+      background: var(--cyan-dim); border: 1px solid rgba(0,212,255,.2);
+      padding: 3px 10px; border-radius: 6px;
+    }
+
+    /* ── REQUIREMENTS ── */
+    .requirements { padding: 100px 0; }
+    .req-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 24px; margin-top: 56px; }
+    .req-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px;
+    }
+    .req-card h3 { font-size: .9rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 20px; }
+    .req-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .req-list li {
+      display: flex; align-items: center; gap: 12px;
+      font-size: .9rem; color: var(--text);
+    }
+    .req-list li::before {
+      content: '✓'; flex-shrink: 0;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: rgba(16,185,129,.15); color: var(--green);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .7rem; font-weight: 900;
+    }
+    .req-list li.warn::before {
+      content: '⚠'; background: rgba(251,191,36,.1); color: #fbbf24;
+    }
+
+    /* ── CTA ── */
+    .cta-section {
+      padding: 100px 0;
+      background: radial-gradient(ellipse at center, rgba(0,212,255,.07) 0%, transparent 70%);
+      text-align: center;
+    }
+    .cta-section h2 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; letter-spacing: -.03em; margin-bottom: 16px; }
+    .cta-section p  { color: var(--muted); font-size: 1.05rem; max-width: 460px; margin: 0 auto 40px; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+      color: var(--muted); font-size: .82rem;
+    }
+    .footer-inner {
+      max-width: 1100px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+    }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { color: var(--muted); text-decoration: none; transition: color .2s; }
+    .footer-links a:hover { color: var(--text); }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width: 768px) {
+      .features-layout { grid-template-columns: 1fr; }
+      .features-visual { display: none; }
+      .how-grid { grid-template-columns: 1fr; }
+      .req-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .stat { border-right: none; border-bottom: 1px solid var(--border); }
+      .stat:last-child { border-bottom: none; }
+      .nav-cta { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">🏷️</div>
+      <span class="nav-logo-text">Conversor<span>ZPL</span></span>
+      <span class="nav-badge">v1.0.1</span>
+    </a>
+    <a href="#download" class="nav-cta">Baixar grátis</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-eyebrow">
+      <div class="hero-eyebrow-dot"></div>
+      Para logística e almoxarifados
+    </div>
+
+    <h1>
+      Etiquetas ZPL viram PDF<br />
+      <span class="grad">com um duplo clique</span>
+    </h1>
+
+    <p class="hero-sub">
+      Sem configuração, sem terminal, sem complicação.
+      Dê um clique no arquivo <code style="font-family:'JetBrains Mono',monospace;font-size:.9em;color:var(--cyan)">.zpl</code> e a etiqueta já abre pronta para imprimir.
+    </p>
+
+    <div class="hero-actions">
+      <a id="download" href="https://github.com/GabrielMouraS/ConversorZPL/releases/latest/download/Launcher.exe" class="btn-primary">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Download gratuito
+      </a>
+      <a href="https://github.com/GabrielMouraS/ConversorZPL" target="_blank" rel="noopener" class="btn-secondary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+        Ver no GitHub
+      </a>
+    </div>
+
+    <!-- DEMO BLOCK -->
+    <div class="demo-wrap" style="margin-top:72px">
+      <div class="demo-bar">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+        <div class="demo-bar-title">ConversorZPL — fluxo de conversão</div>
+      </div>
+      <div class="demo-body">
+        <div class="demo-steps">
+          <div class="demo-step">
+            <div class="demo-step-icon icon-blue">🖱️</div>
+            <div class="demo-step-text">
+              <strong>Duplo clique no arquivo .zpl</strong>
+              <span>O sistema identifica automaticamente e abre</span>
+            </div>
+            <span class="demo-step-tag tag-blue">2 cliques</span>
+          </div>
+          <div class="demo-step">
+            <div class="demo-step-icon icon-purple">⚙️</div>
+            <div class="demo-step-text">
+              <strong>Escolha o tamanho da etiqueta</strong>
+              <span>Grande 100×150 mm ou Pequena 60×40 mm</span>
+            </div>
+            <span class="demo-step-tag tag-purple">1 botão</span>
+          </div>
+          <div class="demo-step">
+            <div class="demo-step-icon icon-green">📄</div>
+            <div class="demo-step-text">
+              <strong>PDF abre no leitor padrão</strong>
+              <span>Pronto para imprimir, sem salvar manualmente</span>
+            </div>
+            <span class="demo-step-tag tag-green">Concluído</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat">
+        <span class="stat-num">0</span>
+        <div class="stat-label">instalações extras necessárias</div>
+      </div>
+      <div class="stat">
+        <span class="stat-num">2</span>
+        <div class="stat-label">cliques do arquivo ao PDF</div>
+      </div>
+      <div class="stat">
+        <span class="stat-num">Win 7+</span>
+        <div class="stat-label">compatibilidade de sistema</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features">
+  <div class="container">
+    <div>
+      <span class="section-label">Funcionalidades</span>
+      <h2 class="section-title">Feito para quem<br />trabalha com logística</h2>
+      <p class="section-sub">Sem curva de aprendizado. Se o operador sabe dar duplo clique, sabe usar o ConversorZPL.</p>
+    </div>
+
+    <div class="features-layout">
+      <div class="features-list">
+        <div class="feat-item">
+          <div class="feat-icon" style="background:var(--cyan-dim)">🔄</div>
+          <div>
+            <h3>Atualização automática e silenciosa</h3>
+            <p>Quando há uma nova versão, o sistema baixa e atualiza em segundo plano — sem avisos, sem interrupções.</p>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="feat-icon" style="background:var(--purple-dim)">📐</div>
+          <div>
+            <h3>Dois tamanhos de etiqueta</h3>
+            <p>Suporte a etiquetas <strong>100×150 mm</strong> (padrão logístico) e <strong>60×40 mm</strong> (patrimonial/SKU).</p>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="feat-icon" style="background:rgba(16,185,129,.12)">📑</div>
+          <div>
+            <h3>Suporte a multipáginas</h3>
+            <p>ZPL com múltiplas etiquetas gera um PDF de várias páginas, sem cortar nenhuma.</p>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="feat-icon" style="background:rgba(251,191,36,.1)">🔒</div>
+          <div>
+            <h3>Licenciamento por máquina</h3>
+            <p>Trial de 30 dias. Após o período, o sistema bloqueia a conversão e exibe o portal de assinatura.</p>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="feat-icon" style="background:rgba(248,113,113,.1)">🪟</div>
+          <div>
+            <h3>Compatível com Windows 7</h3>
+            <p>Compilado em .NET 4.5.2 com TLS 1.2 forçado — roda até em máquinas que nunca foram atualizadas.</p>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="feat-icon" style="background:var(--cyan-dim)">📂</div>
+          <div>
+            <h3>Integração nativa ao Explorer</h3>
+            <p>Associado ao formato <code style="font-family:'JetBrains Mono',monospace;color:var(--cyan);font-size:.85em">.zpl</code> no registro do Windows — duplo clique abre direto.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="features-visual">
+        <div class="vis-title">// conversão em tempo real</div>
+        <div class="vis-file">
+          <div class="vis-file-icon">📄</div>
+          <div>
+            <div class="vis-file-name">etiqueta_pedido_4821.zpl</div>
+            <div class="vis-file-size">3.2 KB · Arquivo ZPL</div>
+          </div>
+        </div>
+        <div class="vis-arrow">↓</div>
+        <div class="vis-progress">
+          <div class="vis-progress-label">
+            <span>Convertendo via Labelary API</span>
+            <span style="color:var(--cyan)">processando…</span>
+          </div>
+          <div class="vis-bar-track"><div class="vis-bar-fill"></div></div>
+        </div>
+        <div class="vis-api" style="margin-top:14px">
+          POST <span>api.labelary.com</span>/v1/printers/8dpmm/labels/<span>4x6</span>/
+        </div>
+        <div class="vis-result">
+          <div class="vis-result-icon">✅</div>
+          <div class="vis-result-text">etiqueta_20260609_143022.pdf — Abrindo…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how">
+  <div class="container">
+    <span class="section-label">Como funciona</span>
+    <h2 class="section-title">Instalação em 3 passos</h2>
+    <p class="section-sub" style="color:var(--muted);line-height:1.7">Sem técnico de TI, sem configuração de servidor. Ideal para implantação presencial rápida.</p>
+
+    <div class="how-grid">
+      <div class="how-card" data-num="01">
+        <div class="how-card-icon">⬇️</div>
+        <h3>Baixe o Launcher</h3>
+        <p>Faça o download do <code style="color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:.85em">Launcher.exe</code> e coloque em qualquer pasta no computador do cliente.</p>
+        <div class="how-card-accent">
+          <span class="code-pill">Launcher.exe</span>
+        </div>
+      </div>
+      <div class="how-card" data-num="02">
+        <div class="how-card-icon">🔗</div>
+        <h3>Registre a associação</h3>
+        <p>Execute o script <code style="color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:.85em">.reg</code> incluso para vincular o formato <code style="color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:.85em">.zpl</code> ao Launcher no Windows.</p>
+        <div class="how-card-accent">
+          <span class="code-pill">instalar_associacao.reg</span>
+        </div>
+      </div>
+      <div class="how-card" data-num="03">
+        <div class="how-card-icon">🚀</div>
+        <h3>Pronto para usar</h3>
+        <p>O núcleo é baixado automaticamente do servidor na primeira execução. A partir daí, só dar duplo clique.</p>
+        <div class="how-card-accent">
+          <span class="code-pill">C:\ProgramData\ConversorZPL\</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REQUIREMENTS -->
+<section class="requirements">
+  <div class="container">
+    <span class="section-label">Requisitos do sistema</span>
+    <h2 class="section-title">Roda em qualquer máquina<br />do almoxarifado</h2>
+
+    <div class="req-grid">
+      <div class="req-card">
+        <h3>Mínimo necessário</h3>
+        <ul class="req-list">
+          <li>Windows 7 SP1 ou superior</li>
+          <li>.NET Framework 4.5.2 (incluso no Win 7 atualizado)</li>
+          <li>Conexão com internet (apenas na primeira execução)</li>
+          <li>Leitor de PDF instalado (Adobe Reader, SumatraPDF etc.)</li>
+        </ul>
+      </div>
+      <div class="req-card">
+        <h3>Observações importantes</h3>
+        <ul class="req-list">
+          <li class="warn">Antivírus pode bloquear o download do núcleo — adicionar exclusão na primeira instalação</li>
+          <li>Não requer instalação formal (sem MSI / setup.exe)</li>
+          <li>Atualiza-se automaticamente sem intervenção do usuário</li>
+          <li>Trial de 30 dias gratuito a partir da primeira execução</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-section">
+  <div class="container">
+    <h2>Comece hoje.<br />É gratuito por 30 dias.</h2>
+    <p>Sem cadastro, sem cartão de crédito. Só baixar e instalar.</p>
+    <a href="https://github.com/GabrielMouraS/ConversorZPL/releases/latest/download/Launcher.exe" class="btn-primary" style="font-size:1.1rem;padding:18px 40px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Baixar ConversorZPL
+    </a>
+    <p style="margin-top:20px;font-size:.8rem;color:var(--muted)">
+      Windows 7 / 8 / 10 / 11 &nbsp;·&nbsp; .NET 4.5.2 &nbsp;·&nbsp; ~500 KB
+    </p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <span>© 2026 ConversorZPL. Desenvolvido para logística brasileira.</span>
+    <div class="footer-links">
+      <a href="https://github.com/GabrielMouraS/ConversorZPL" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/GabrielMouraS/ConversorZPL/issues" target="_blank" rel="noopener">Suporte</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

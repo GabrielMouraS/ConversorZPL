@@ -6,3 +6,11 @@ C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\VS\ConversorEtiquetas\Conver
 C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\VS\ConversorEtiquetas\ConversorEtiquetas\obj\Release\ConversorEtiquetas.exe
 C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\VS\ConversorEtiquetas\ConversorEtiquetas\obj\Release\ConversorEtiquetas.pdb
 C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\VS\ConversorEtiquetas\ConversorEtiquetas\obj\Release\ConversorEtiquetas.exe.config
+C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\ConversorZPL\ConversorEtiquetas\ConversorEtiquetas\bin\Release\ConversorEtiquetas.exe.config
+C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\ConversorZPL\ConversorEtiquetas\ConversorEtiquetas\bin\Release\ConversorEtiquetas.exe
+C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\ConversorZPL\ConversorEtiquetas\ConversorEtiquetas\bin\Release\ConversorEtiquetas.pdb
+C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\ConversorZPL\ConversorEtiquetas\ConversorEtiquetas\obj\Release\ConversorEtiquetas.csproj.AssemblyReference.cache
+C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\ConversorZPL\ConversorEtiquetas\ConversorEtiquetas\obj\Release\ConversorEtiquetas.exe.config
+C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\ConversorZPL\ConversorEtiquetas\ConversorEtiquetas\obj\Release\ConversorEtiquetas.csproj.CoreCompileInputs.cache
+C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\ConversorZPL\ConversorEtiquetas\ConversorEtiquetas\obj\Release\ConversorEtiquetas.exe
+C:\Users\Usuario\Desktop\PROJETOS\CONVERSOR_ZPL_PDF\ConversorZPL\ConversorEtiquetas\ConversorEtiquetas\obj\Release\ConversorEtiquetas.pdb

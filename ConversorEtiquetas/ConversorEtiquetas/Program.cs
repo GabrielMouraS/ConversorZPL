@@ -26,11 +26,27 @@ namespace ConversorZPL
                 // 3. IDENTIFICAÇÃO: Captura o MAC Address da placa de rede
                 string macAddress = CapturarMacAddress();
 
-                // 4. CONSULTA DE VALIDADE 
-                // [HOJE]: Estamos usando uma data fixa de 30 dias para a instalação presencial
-                // [FUTURO]: Aqui o código fará a leitura real do banco de dados no Supabase
-                DateTime dataVencimento = DateTime.Now.AddDays(30);
+                // 4. CONSULTA DE VALIDADE
+                // Grava a data de instalação uma única vez em disco.
+                // [FUTURO]: Substituir pela leitura real do banco de dados no Supabase.
+                string pastaSistema = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                    "ConversorZPL");
+                Directory.CreateDirectory(pastaSistema);
 
+                string arquivoInstalacao = Path.Combine(pastaSistema, "instalado_em.txt");
+                DateTime dataInstalacao;
+                if (!File.Exists(arquivoInstalacao))
+                {
+                    dataInstalacao = DateTime.Now;
+                    File.WriteAllText(arquivoInstalacao, dataInstalacao.ToString("O"));
+                }
+                else
+                {
+                    dataInstalacao = DateTime.Parse(File.ReadAllText(arquivoInstalacao));
+                }
+
+                DateTime dataVencimento = dataInstalacao.AddDays(30);
                 int diasRestantes = (dataVencimento - DateTime.Now).Days;
 
                 // 5. A RÉGUA DE COBRANÇA (As 3 Fases)
@@ -121,6 +137,7 @@ namespace ConversorZPL
 
                 using (var client = new HttpClient())
                 {
+                    client.Timeout = TimeSpan.FromSeconds(30);
                     client.DefaultRequestHeaders.Accept.Clear();
                     client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/pdf"));
 
@@ -132,7 +149,8 @@ namespace ConversorZPL
                     {
                         byte[] pdfBytes = await response.Content.ReadAsByteArrayAsync();
 
-                        string pdfPath = Path.Combine(Path.GetTempPath(), "etiqueta_pronta.pdf");
+                        // Nome com timestamp para evitar conflito quando o PDF anterior ainda está aberto
+                        string pdfPath = Path.Combine(Path.GetTempPath(), $"etiqueta_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
                         File.WriteAllBytes(pdfPath, pdfBytes);
 
                         Process.Start(pdfPath);
